@@ -2,6 +2,7 @@ package inbound
 
 import (
 	"context"
+	"github.com/v2fly/v2ray-core/v4/common/session"
 
 	core "github.com/v2fly/v2ray-core/v4"
 	"github.com/v2fly/v2ray-core/v4/app/proxyman"
@@ -49,6 +50,8 @@ type AlwaysOnInboundHandler struct {
 }
 
 func NewAlwaysOnInboundHandler(ctx context.Context, tag string, receiverConfig *proxyman.ReceiverConfig, proxyConfig interface{}) (*AlwaysOnInboundHandler, error) {
+	ctx = session.SetNetNamespaceToContext(ctx, receiverConfig.NetNamespace)
+
 	rawProxy, err := common.CreateObject(ctx, proxyConfig)
 	if err != nil {
 		return nil, err

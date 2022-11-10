@@ -62,6 +62,21 @@ func ContentFromContext(ctx context.Context) *Content {
 	return nil
 }
 
+func GetNetNamespaceFromContext(ctx context.Context) string {
+	if ContentFromContext(ctx) == nil {
+		return ""
+	}
+	return ContentFromContext(ctx).Attribute("netNamespace")
+}
+
+func SetNetNamespaceToContext(ctx context.Context, ns string) context.Context {
+	if contentFromContext := ContentFromContext(ctx); contentFromContext == nil {
+		ctx = ContextWithContent(ctx, &Content{})
+	}
+	ContentFromContext(ctx).SetAttribute("netNamespace", ns)
+	return ctx
+}
+
 // ContextWithMuxPrefered returns a new context with the given bool
 func ContextWithMuxPrefered(ctx context.Context, forced bool) context.Context {
 	return context.WithValue(ctx, muxPreferedSessionKey, forced)

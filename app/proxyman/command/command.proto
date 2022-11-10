@@ -54,6 +54,38 @@ message AlterOutboundRequest {
   v2ray.core.common.serial.TypedMessage operation = 2;
 }
 
+message GetInboundConfRequest {
+  string tag = 1;
+}
+
+message GetInboundConfResponse {
+  core.InboundHandlerConfig inbound = 1;
+}
+
+message GetOutboundConfRequest {
+  string tag = 1;
+}
+
+message GetOutboundConfResponse {
+  core.OutboundHandlerConfig outbound = 1;
+}
+
+message ListInboundConfRequest {
+  string prefix = 1;
+}
+
+message ListInboundConfResponse {
+  repeated core.InboundHandlerConfig inbounds = 1;
+}
+
+message ListOutboundConfRequest {
+  string prefix = 1;
+}
+
+message ListOutboundConfResponse {
+  repeated  core.OutboundHandlerConfig outbounds = 1;
+}
+
 message AlterOutboundResponse {}
 
 service HandlerService {
@@ -68,6 +100,14 @@ service HandlerService {
   rpc RemoveOutbound(RemoveOutboundRequest) returns (RemoveOutboundResponse) {}
 
   rpc AlterOutbound(AlterOutboundRequest) returns (AlterOutboundResponse) {}
+
+  rpc GetInboundConf(GetInboundConfRequest) returns (GetInboundConfResponse) {}
+
+  rpc GetOutboundConf(GetOutboundConfRequest) returns (GetOutboundConfResponse) {}
+
+  rpc ListInboundConf(ListInboundConfRequest) returns (ListInboundConfResponse) {}
+
+  rpc ListOutboundConf(ListOutboundConfRequest) returns (ListOutboundConfResponse) {}
 }
 
 message Config {}

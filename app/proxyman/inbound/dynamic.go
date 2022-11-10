@@ -2,6 +2,7 @@ package inbound
 
 import (
 	"context"
+	"github.com/v2fly/v2ray-core/v4/common/session"
 	"sync"
 	"time"
 
@@ -41,7 +42,7 @@ func NewDynamicInboundHandler(ctx context.Context, tag string, receiverConfig *p
 		portsInUse:     make(map[net.Port]bool),
 		mux:            mux.NewServer(ctx),
 		v:              v,
-		ctx:            ctx,
+		ctx:            session.SetNetNamespaceToContext(ctx, receiverConfig.NetNamespace),
 	}
 
 	mss, err := internet.ToMemoryStreamConfig(receiverConfig.StreamSettings)

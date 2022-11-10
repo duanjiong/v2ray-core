@@ -86,6 +86,8 @@ func (d *Door) Process(ctx context.Context, network net.Network, conn internet.C
 		Address: d.address,
 		Port:    d.port,
 	}
+	ctx = session.SetNetNamespaceToContext(ctx, d.config.NetNamespace)
+	ctx = session.SetForcedOutboundTagToContext(ctx, d.config.ForcedOutboundTag)
 
 	destinationOverridden := false
 	if d.config.FollowRedirect {
