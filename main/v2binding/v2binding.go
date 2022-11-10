@@ -1,6 +1,8 @@
 package v2binding
 
 import (
+	"github.com/v2fly/v2ray-core/v5/proxy/blackhole"
+	"github.com/v2fly/v2ray-core/v5/proxy/freedom"
 	"google.golang.org/protobuf/types/known/anypb"
 
 	core "github.com/v2fly/v2ray-core/v5"
@@ -13,7 +15,6 @@ import (
 	"github.com/v2fly/v2ray-core/v5/common/net"
 	"github.com/v2fly/v2ray-core/v5/common/serial"
 	_ "github.com/v2fly/v2ray-core/v5/main/distro/all"
-	"github.com/v2fly/v2ray-core/v5/proxy/blackhole"
 	"github.com/v2fly/v2ray-core/v5/proxy/dokodemo"
 )
 
@@ -49,13 +50,41 @@ func (b *bindingInstance) startAPIInstance() {
 			{
 				Tag: "api",
 				ReceiverSettings: serial.ToTypedMessage(&proxyman.ReceiverConfig{
-					PortRange: net.SinglePortRange(10999),
+					PortRange: net.SinglePortRange(999),
 					Listen:    net.NewIPOrDomain(net.AnyIP),
 				}),
 				ProxySettings: serial.ToTypedMessage(&dokodemo.Config{
 					Address:  net.NewIPOrDomain(net.LocalHostIP),
-					Port:     uint32(10999),
+					Port:     uint32(999),
 					Networks: []net.Network{net.Network_TCP},
+				}),
+			},
+			{
+				Tag: "from-vpc-to-calico",
+				ReceiverSettings: serial.ToTypedMessage(&proxyman.ReceiverConfig{
+					PortRange:    net.SinglePortRange(998),
+					Listen:       net.NewIPOrDomain(net.AnyIP),
+					NetNamespace: "/var/run/netns/test",
+				}),
+				ProxySettings: serial.ToTypedMessage(&dokodemo.Config{
+					Address:           net.NewIPOrDomain(net.LocalHostIP),
+					Port:              uint32(997),
+					Networks:          []net.Network{net.Network_TCP},
+					ForcedOutboundTag: "freedom",
+				}),
+			},
+			{
+				Tag: "from-calico-to-vpc",
+				ReceiverSettings: serial.ToTypedMessage(&proxyman.ReceiverConfig{
+					PortRange: net.SinglePortRange(996),
+					Listen:    net.NewIPOrDomain(net.AnyIP),
+				}),
+				ProxySettings: serial.ToTypedMessage(&dokodemo.Config{
+					Address:           net.NewIPOrDomain(net.LocalHostIP),
+					Port:              uint32(995),
+					Networks:          []net.Network{net.Network_TCP},
+					ForcedOutboundTag: "freedom",
+					NetNamespace:      "/var/run/netns/test",
 				}),
 			},
 		},
@@ -63,6 +92,10 @@ func (b *bindingInstance) startAPIInstance() {
 			{
 				Tag:           "default-outbound",
 				ProxySettings: serial.ToTypedMessage(&blackhole.Config{}),
+			},
+			{
+				Tag:           "freedom",
+				ProxySettings: serial.ToTypedMessage(&freedom.Config{}),
 			},
 		},
 	}

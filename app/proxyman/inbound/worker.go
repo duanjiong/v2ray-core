@@ -2,6 +2,7 @@ package inbound
 
 import (
 	"context"
+	"github.com/containernetworking/plugins/pkg/ns"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -111,10 +112,27 @@ func (w *tcpWorker) Proxy() proxy.Inbound {
 }
 
 func (w *tcpWorker) Start() error {
+	var (
+		hub internet.Listener
+		err error
+	)
+	netNamespace := session.GetNetNamespaceFromContext(w.ctx)
+
 	ctx := context.Background()
-	hub, err := internet.ListenTCP(ctx, w.address, w.port, w.stream, func(conn internet.Connection) {
-		go w.callback(conn)
-	})
+
+	if netNamespace == "" {
+		hub, err = internet.ListenTCP(ctx, w.address, w.port, w.stream, func(conn internet.Connection) {
+			go w.callback(conn)
+		})
+	} else {
+		err = ns.WithNetNSPath(netNamespace, func(netNS ns.NetNS) error {
+			hub, err = internet.ListenTCP(ctx, w.address, w.port, w.stream, func(conn internet.Connection) {
+				go w.callback(conn)
+			})
+			return err
+		})
+	}
+
 	if err != nil {
 		return newError("failed to listen TCP on ", w.port).AtWarning().Base(err)
 	}
@@ -369,9 +387,23 @@ func (w *udpWorker) clean() error {
 }
 
 func (w *udpWorker) Start() error {
+	var (
+		h   *udp.Hub
+		err error
+	)
+
 	w.activeConn = make(map[connID]*udpConn, 16)
 	ctx := context.Background()
-	h, err := udp.ListenUDP(ctx, w.address, w.port, w.stream, udp.HubCapacity(256))
+	netNamespace := session.GetNetNamespaceFromContext(w.ctx)
+
+	if netNamespace == "" {
+		h, err = udp.ListenUDP(ctx, w.address, w.port, w.stream, udp.HubCapacity(256))
+	} else {
+		err = ns.WithNetNSPath(netNamespace, func(netNS ns.NetNS) error {
+			h, err = udp.ListenUDP(ctx, w.address, w.port, w.stream, udp.HubCapacity(256))
+			return err
+		})
+	}
 	if err != nil {
 		return err
 	}
