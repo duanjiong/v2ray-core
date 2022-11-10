@@ -75,6 +75,7 @@ message ReceiverConfig {
   // Deprecated. Use sniffing_settings.
   repeated KnownProtocols domain_override = 7 [deprecated = true];
   SniffingConfig sniffing_settings = 8;
+  string net_namespace = 9;
 }
 
 message InboundHandlerConfig {

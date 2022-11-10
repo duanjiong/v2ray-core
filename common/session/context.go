@@ -119,6 +119,21 @@ func SetForcedOutboundTagToContext(ctx context.Context, tag string) context.Cont
 	return ctx
 }
 
+func GetNetNamespaceFromContext(ctx context.Context) string {
+	if ContentFromContext(ctx) == nil {
+		return ""
+	}
+	return ContentFromContext(ctx).Attribute("netNamespace")
+}
+
+func SetNetNamespaceToContext(ctx context.Context, ns string) context.Context {
+	if contentFromContext := ContentFromContext(ctx); contentFromContext == nil {
+		ctx = ContextWithContent(ctx, &Content{})
+	}
+	ContentFromContext(ctx).SetAttribute("netNamespace", ns)
+	return ctx
+}
+
 type TrackedRequestErrorFeedback interface {
 	SubmitError(err error)
 }

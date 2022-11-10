@@ -2,7 +2,6 @@ package inbound
 
 import (
 	"context"
-
 	core "github.com/v2fly/v2ray-core/v5"
 	"github.com/v2fly/v2ray-core/v5/app/proxyman"
 	"github.com/v2fly/v2ray-core/v5/common"
@@ -10,6 +9,7 @@ import (
 	"github.com/v2fly/v2ray-core/v5/common/errors"
 	"github.com/v2fly/v2ray-core/v5/common/mux"
 	"github.com/v2fly/v2ray-core/v5/common/net"
+	"github.com/v2fly/v2ray-core/v5/common/session"
 	"github.com/v2fly/v2ray-core/v5/features/policy"
 	"github.com/v2fly/v2ray-core/v5/features/stats"
 	"github.com/v2fly/v2ray-core/v5/proxy"
@@ -49,6 +49,8 @@ type AlwaysOnInboundHandler struct {
 }
 
 func NewAlwaysOnInboundHandler(ctx context.Context, tag string, receiverConfig *proxyman.ReceiverConfig, proxyConfig interface{}) (*AlwaysOnInboundHandler, error) {
+	ctx = session.SetNetNamespaceToContext(ctx, receiverConfig.NetNamespace)
+
 	rawProxy, err := common.CreateObject(ctx, proxyConfig)
 	if err != nil {
 		return nil, err
