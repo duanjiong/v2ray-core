@@ -2,6 +2,7 @@ package command
 
 import (
 	"context"
+	"sync"
 
 	grpc "google.golang.org/grpc"
 
@@ -67,9 +68,34 @@ type handlerServer struct {
 	s   *core.Instance
 	ihm inbound.Manager
 	ohm outbound.Manager
+
+	inboundAccess         sync.RWMutex
+	taggedInboundRequest  map[string]*AddInboundRequest
+	outboundAccess        sync.RWMutex
+	taggedOutboundRequest map[string]*AddOutboundRequest
+}
+
+func (s *handlerServer) GetInboundConf(ctx context.Context, request *GetInboundConfRequest) (*GetInboundConfResponse, error) {
+	s.inboundAccess.Lock()
+	defer s.inboundAccess.Unlock()
+
+	return &GetInboundConfResponse{Inbound: s.taggedInboundRequest[request.GetTag()].Inbound}, nil
+}
+
+func (s *handlerServer) GetOutboundConf(ctx context.Context, request *GetOutboundConfRequest) (*GetOutboundConfResponse, error) {
+	s.outboundAccess.Lock()
+	defer s.outboundAccess.Unlock()
+
+	return &GetOutboundConfResponse{Outbound: s.taggedOutboundRequest[request.GetTag()].Outbound}, nil
 }
 
 func (s *handlerServer) AddInbound(ctx context.Context, request *AddInboundRequest) (*AddInboundResponse, error) {
+	s.inboundAccess.Lock()
+	if request.Inbound != nil && request.Inbound.Tag != "" {
+		s.taggedInboundRequest[request.Inbound.Tag] = request
+	}
+	s.inboundAccess.Unlock()
+
 	if err := core.AddInboundHandler(s.s, request.Inbound); err != nil {
 		return nil, err
 	}
@@ -78,6 +104,11 @@ func (s *handlerServer) AddInbound(ctx context.Context, request *AddInboundReque
 }
 
 func (s *handlerServer) RemoveInbound(ctx context.Context, request *RemoveInboundRequest) (*RemoveInboundResponse, error) {
+	s.inboundAccess.Lock()
+	if request.Tag != "" {
+		delete(s.taggedInboundRequest, request.Tag)
+	}
+	s.inboundAccess.Unlock()
 	return &RemoveInboundResponse{}, s.ihm.RemoveHandler(ctx, request.Tag)
 }
 
@@ -100,6 +131,12 @@ func (s *handlerServer) AlterInbound(ctx context.Context, request *AlterInboundR
 }
 
 func (s *handlerServer) AddOutbound(ctx context.Context, request *AddOutboundRequest) (*AddOutboundResponse, error) {
+	s.outboundAccess.Lock()
+	if request.Outbound != nil && request.Outbound.Tag != "" {
+		s.taggedOutboundRequest[request.Outbound.Tag] = request
+	}
+	s.outboundAccess.Unlock()
+
 	if err := core.AddOutboundHandler(s.s, request.Outbound); err != nil {
 		return nil, err
 	}
@@ -107,6 +144,11 @@ func (s *handlerServer) AddOutbound(ctx context.Context, request *AddOutboundReq
 }
 
 func (s *handlerServer) RemoveOutbound(ctx context.Context, request *RemoveOutboundRequest) (*RemoveOutboundResponse, error) {
+	s.outboundAccess.Lock()
+	if request.Tag != "" {
+		delete(s.taggedOutboundRequest, request.Tag)
+	}
+	s.outboundAccess.Unlock()
 	return &RemoveOutboundResponse{}, s.ohm.RemoveHandler(ctx, request.Tag)
 }
 
