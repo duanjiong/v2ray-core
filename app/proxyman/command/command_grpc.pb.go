@@ -17,9 +17,11 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type HandlerServiceClient interface {
 	AddInbound(ctx context.Context, in *AddInboundRequest, opts ...grpc.CallOption) (*AddInboundResponse, error)
+	GetInboundConf(ctx context.Context, in *GetInboundConfRequest, opts ...grpc.CallOption) (*GetInboundConfResponse, error)
 	RemoveInbound(ctx context.Context, in *RemoveInboundRequest, opts ...grpc.CallOption) (*RemoveInboundResponse, error)
 	AlterInbound(ctx context.Context, in *AlterInboundRequest, opts ...grpc.CallOption) (*AlterInboundResponse, error)
 	AddOutbound(ctx context.Context, in *AddOutboundRequest, opts ...grpc.CallOption) (*AddOutboundResponse, error)
+	GetOutboundConf(ctx context.Context, in *GetOutboundConfRequest, opts ...grpc.CallOption) (*GetOutboundConfResponse, error)
 	RemoveOutbound(ctx context.Context, in *RemoveOutboundRequest, opts ...grpc.CallOption) (*RemoveOutboundResponse, error)
 	AlterOutbound(ctx context.Context, in *AlterOutboundRequest, opts ...grpc.CallOption) (*AlterOutboundResponse, error)
 }
@@ -35,6 +37,15 @@ func NewHandlerServiceClient(cc grpc.ClientConnInterface) HandlerServiceClient {
 func (c *handlerServiceClient) AddInbound(ctx context.Context, in *AddInboundRequest, opts ...grpc.CallOption) (*AddInboundResponse, error) {
 	out := new(AddInboundResponse)
 	err := c.cc.Invoke(ctx, "/v2ray.core.app.proxyman.command.HandlerService/AddInbound", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *handlerServiceClient) GetInboundConf(ctx context.Context, in *GetInboundConfRequest, opts ...grpc.CallOption) (*GetInboundConfResponse, error) {
+	out := new(GetInboundConfResponse)
+	err := c.cc.Invoke(ctx, "/v2ray.core.app.proxyman.command.HandlerService/GetInboundConf", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -68,6 +79,15 @@ func (c *handlerServiceClient) AddOutbound(ctx context.Context, in *AddOutboundR
 	return out, nil
 }
 
+func (c *handlerServiceClient) GetOutboundConf(ctx context.Context, in *GetOutboundConfRequest, opts ...grpc.CallOption) (*GetOutboundConfResponse, error) {
+	out := new(GetOutboundConfResponse)
+	err := c.cc.Invoke(ctx, "/v2ray.core.app.proxyman.command.HandlerService/GetOutboundConf", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *handlerServiceClient) RemoveOutbound(ctx context.Context, in *RemoveOutboundRequest, opts ...grpc.CallOption) (*RemoveOutboundResponse, error) {
 	out := new(RemoveOutboundResponse)
 	err := c.cc.Invoke(ctx, "/v2ray.core.app.proxyman.command.HandlerService/RemoveOutbound", in, out, opts...)
@@ -91,9 +111,11 @@ func (c *handlerServiceClient) AlterOutbound(ctx context.Context, in *AlterOutbo
 // for forward compatibility
 type HandlerServiceServer interface {
 	AddInbound(context.Context, *AddInboundRequest) (*AddInboundResponse, error)
+	GetInboundConf(context.Context, *GetInboundConfRequest) (*GetInboundConfResponse, error)
 	RemoveInbound(context.Context, *RemoveInboundRequest) (*RemoveInboundResponse, error)
 	AlterInbound(context.Context, *AlterInboundRequest) (*AlterInboundResponse, error)
 	AddOutbound(context.Context, *AddOutboundRequest) (*AddOutboundResponse, error)
+	GetOutboundConf(context.Context, *GetOutboundConfRequest) (*GetOutboundConfResponse, error)
 	RemoveOutbound(context.Context, *RemoveOutboundRequest) (*RemoveOutboundResponse, error)
 	AlterOutbound(context.Context, *AlterOutboundRequest) (*AlterOutboundResponse, error)
 	mustEmbedUnimplementedHandlerServiceServer()
@@ -106,6 +128,9 @@ type UnimplementedHandlerServiceServer struct {
 func (UnimplementedHandlerServiceServer) AddInbound(context.Context, *AddInboundRequest) (*AddInboundResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddInbound not implemented")
 }
+func (UnimplementedHandlerServiceServer) GetInboundConf(context.Context, *GetInboundConfRequest) (*GetInboundConfResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetInboundConf not implemented")
+}
 func (UnimplementedHandlerServiceServer) RemoveInbound(context.Context, *RemoveInboundRequest) (*RemoveInboundResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RemoveInbound not implemented")
 }
@@ -114,6 +139,9 @@ func (UnimplementedHandlerServiceServer) AlterInbound(context.Context, *AlterInb
 }
 func (UnimplementedHandlerServiceServer) AddOutbound(context.Context, *AddOutboundRequest) (*AddOutboundResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddOutbound not implemented")
+}
+func (UnimplementedHandlerServiceServer) GetOutboundConf(context.Context, *GetOutboundConfRequest) (*GetOutboundConfResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetOutboundConf not implemented")
 }
 func (UnimplementedHandlerServiceServer) RemoveOutbound(context.Context, *RemoveOutboundRequest) (*RemoveOutboundResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RemoveOutbound not implemented")
@@ -148,6 +176,24 @@ func _HandlerService_AddInbound_Handler(srv interface{}, ctx context.Context, de
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(HandlerServiceServer).AddInbound(ctx, req.(*AddInboundRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _HandlerService_GetInboundConf_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetInboundConfRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(HandlerServiceServer).GetInboundConf(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/v2ray.core.app.proxyman.command.HandlerService/GetInboundConf",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(HandlerServiceServer).GetInboundConf(ctx, req.(*GetInboundConfRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -206,6 +252,24 @@ func _HandlerService_AddOutbound_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _HandlerService_GetOutboundConf_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetOutboundConfRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(HandlerServiceServer).GetOutboundConf(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/v2ray.core.app.proxyman.command.HandlerService/GetOutboundConf",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(HandlerServiceServer).GetOutboundConf(ctx, req.(*GetOutboundConfRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _HandlerService_RemoveOutbound_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(RemoveOutboundRequest)
 	if err := dec(in); err != nil {
@@ -254,6 +318,10 @@ var HandlerService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _HandlerService_AddInbound_Handler,
 		},
 		{
+			MethodName: "GetInboundConf",
+			Handler:    _HandlerService_GetInboundConf_Handler,
+		},
+		{
 			MethodName: "RemoveInbound",
 			Handler:    _HandlerService_RemoveInbound_Handler,
 		},
@@ -264,6 +332,10 @@ var HandlerService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "AddOutbound",
 			Handler:    _HandlerService_AddOutbound_Handler,
+		},
+		{
+			MethodName: "GetOutboundConf",
+			Handler:    _HandlerService_GetOutboundConf_Handler,
 		},
 		{
 			MethodName: "RemoveOutbound",
