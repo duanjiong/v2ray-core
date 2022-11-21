@@ -27,6 +27,14 @@ message GetInboundConfRequest {
   string tag = 1;
 }
 
+message ListInboundConfRequest {
+  string prefix = 1;
+}
+
+message ListInboundConfResponse {
+  repeated core.InboundHandlerConfig inbounds = 1;
+}
+
 message GetInboundConfResponse {
   core.InboundHandlerConfig inbound = 1;
 }
@@ -60,6 +68,14 @@ message GetOutboundConfResponse {
   core.OutboundHandlerConfig outbound = 1;
 }
 
+message ListOutboundConfRequest {
+  string prefix = 1;
+}
+
+message ListOutboundConfResponse {
+  repeated  core.OutboundHandlerConfig outbounds = 1;
+}
+
 message RemoveOutboundRequest {
   string tag = 1;
 }
@@ -78,6 +94,8 @@ service HandlerService {
 
   rpc GetInboundConf(GetInboundConfRequest) returns (GetInboundConfResponse) {}
 
+  rpc ListInboundConf(ListInboundConfRequest) returns (ListInboundConfResponse) {}
+
   rpc RemoveInbound(RemoveInboundRequest) returns (RemoveInboundResponse) {}
 
   rpc AlterInbound(AlterInboundRequest) returns (AlterInboundResponse) {}
@@ -85,6 +103,8 @@ service HandlerService {
   rpc AddOutbound(AddOutboundRequest) returns (AddOutboundResponse) {}
 
   rpc GetOutboundConf(GetOutboundConfRequest) returns (GetOutboundConfResponse) {}
+
+  rpc ListOutboundConf(ListOutboundConfRequest) returns (ListOutboundConfResponse) {}
 
   rpc RemoveOutbound(RemoveOutboundRequest) returns (RemoveOutboundResponse) {}
 

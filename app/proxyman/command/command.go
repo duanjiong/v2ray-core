@@ -2,6 +2,7 @@ package command
 
 import (
 	"context"
+	"strings"
 	"sync"
 
 	grpc "google.golang.org/grpc"
@@ -75,18 +76,64 @@ type handlerServer struct {
 	taggedOutboundRequest map[string]*AddOutboundRequest
 }
 
+func (s *handlerServer) ListInboundConf(ctx context.Context, request *ListInboundConfRequest) (*ListInboundConfResponse, error) {
+	s.inboundAccess.Lock()
+	defer s.inboundAccess.Unlock()
+
+	var (
+		result ListInboundConfResponse
+	)
+
+	for _, inbound := range s.taggedInboundRequest {
+		if request.Prefix != "" && !strings.HasPrefix(inbound.Inbound.Tag, request.Prefix) {
+			continue
+		}
+		result.Inbounds = append(result.Inbounds, inbound.Inbound)
+	}
+
+	return &result, nil
+}
+
+func (s *handlerServer) ListOutboundConf(ctx context.Context, request *ListOutboundConfRequest) (*ListOutboundConfResponse, error) {
+	s.outboundAccess.Lock()
+	defer s.outboundAccess.Unlock()
+
+	var (
+		result ListOutboundConfResponse
+	)
+
+	for _, outbound := range s.taggedOutboundRequest {
+		if request.Prefix != "" && !strings.HasPrefix(outbound.Outbound.Tag, request.Prefix) {
+			continue
+		}
+		result.Outbounds = append(result.Outbounds, outbound.Outbound)
+	}
+
+	return &result, nil
+}
+
 func (s *handlerServer) GetInboundConf(ctx context.Context, request *GetInboundConfRequest) (*GetInboundConfResponse, error) {
 	s.inboundAccess.Lock()
 	defer s.inboundAccess.Unlock()
 
-	return &GetInboundConfResponse{Inbound: s.taggedInboundRequest[request.GetTag()].Inbound}, nil
+	req := s.taggedInboundRequest[request.GetTag()]
+	if req == nil {
+		return nil, newError("inbound not found: ", request.GetTag())
+	}
+
+	return &GetInboundConfResponse{Inbound: req.Inbound}, nil
 }
 
 func (s *handlerServer) GetOutboundConf(ctx context.Context, request *GetOutboundConfRequest) (*GetOutboundConfResponse, error) {
 	s.outboundAccess.Lock()
 	defer s.outboundAccess.Unlock()
 
-	return &GetOutboundConfResponse{Outbound: s.taggedOutboundRequest[request.GetTag()].Outbound}, nil
+	req := s.taggedOutboundRequest[request.GetTag()]
+	if req == nil {
+		return nil, newError("outbound not found: ", request.GetTag())
+	}
+
+	return &GetOutboundConfResponse{Outbound: req.Outbound}, nil
 }
 
 func (s *handlerServer) AddInbound(ctx context.Context, request *AddInboundRequest) (*AddInboundResponse, error) {
@@ -179,6 +226,8 @@ func (s *service) Register(server *grpc.Server) {
 	common.Must(s.v.RequireFeatures(func(im inbound.Manager, om outbound.Manager) {
 		hs.ihm = im
 		hs.ohm = om
+		hs.taggedInboundRequest = make(map[string]*AddInboundRequest)
+		hs.taggedOutboundRequest = make(map[string]*AddOutboundRequest)
 	}))
 	RegisterHandlerServiceServer(server, hs)
 }
