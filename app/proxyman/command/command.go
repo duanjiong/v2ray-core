@@ -230,6 +230,8 @@ func (s *service) Register(server *grpc.Server) {
 	common.Must(s.v.RequireFeatures(func(im inbound.Manager, om outbound.Manager) {
 		hs.ihm = im
 		hs.ohm = om
+		hs.taggedInboundRequest = make(map[string]*AddInboundRequest)
+		hs.taggedOutboundRequest = make(map[string]*AddOutboundRequest)
 	}))
 	RegisterHandlerServiceServer(server, hs)
 }
