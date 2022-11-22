@@ -36,7 +36,7 @@ func (i InstanceMgr) ListInstance(ctx context.Context) ([]string, error) {
 }
 
 func (i InstanceMgr) AddInstance(ctx context.Context, name string, config []byte, configType string) error {
-	coreConfig, err := core.LoadConfig(configType, config)
+	coreConfig, err := core.LoadConfig(configType, "", config)
 	if err != nil {
 		return newError("unable to load config").Base(err)
 	}
