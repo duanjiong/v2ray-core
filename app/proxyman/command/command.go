@@ -139,15 +139,15 @@ func (s *handlerServer) GetOutboundConf(ctx context.Context, request *GetOutboun
 }
 
 func (s *handlerServer) AddInbound(ctx context.Context, request *AddInboundRequest) (*AddInboundResponse, error) {
+	if err := core.AddInboundHandler(s.s, request.Inbound); err != nil {
+		return nil, err
+	}
+
 	s.inboundAccess.Lock()
 	if request.Inbound != nil && request.Inbound.Tag != "" {
 		s.taggedInboundRequest[request.Inbound.Tag] = request
 	}
 	s.inboundAccess.Unlock()
-
-	if err := core.AddInboundHandler(s.s, request.Inbound); err != nil {
-		return nil, err
-	}
 
 	return &AddInboundResponse{}, nil
 }
@@ -181,15 +181,16 @@ func (s *handlerServer) AlterInbound(ctx context.Context, request *AlterInboundR
 }
 
 func (s *handlerServer) AddOutbound(ctx context.Context, request *AddOutboundRequest) (*AddOutboundResponse, error) {
+	if err := core.AddOutboundHandler(s.s, request.Outbound); err != nil {
+		return nil, err
+	}
+
 	s.outboundAccess.Lock()
 	if request.Outbound != nil && request.Outbound.Tag != "" {
 		s.taggedOutboundRequest[request.Outbound.Tag] = request
 	}
 	s.outboundAccess.Unlock()
 
-	if err := core.AddOutboundHandler(s.s, request.Outbound); err != nil {
-		return nil, err
-	}
 	return &AddOutboundResponse{}, nil
 }
 
