@@ -138,6 +138,7 @@ func (s *handlerServer) GetOutboundConf(ctx context.Context, request *GetOutboun
 
 func (s *handlerServer) AddInbound(ctx context.Context, request *AddInboundRequest) (*AddInboundResponse, error) {
 	if err := core.AddInboundHandler(s.s, request.Inbound); err != nil {
+		s.ihm.RemoveHandler(ctx, request.Inbound.Tag)
 		return nil, err
 	}
 
@@ -179,6 +180,7 @@ func (s *handlerServer) AlterInbound(ctx context.Context, request *AlterInboundR
 
 func (s *handlerServer) AddOutbound(ctx context.Context, request *AddOutboundRequest) (*AddOutboundResponse, error) {
 	if err := core.AddOutboundHandler(s.s, request.Outbound); err != nil {
+		s.ohm.RemoveHandler(ctx, request.Outbound.Tag)
 		return nil, err
 	}
 
