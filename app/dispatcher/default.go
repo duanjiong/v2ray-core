@@ -22,8 +22,6 @@ import (
 	"github.com/v2fly/v2ray-core/v5/features/stats"
 	"github.com/v2fly/v2ray-core/v5/transport"
 	"github.com/v2fly/v2ray-core/v5/transport/pipe"
-
-	"github.com/containernetworking/plugins/pkg/ns"
 )
 
 var errSniffingTimeout = newError("timeout on sniffing")
@@ -330,13 +328,5 @@ func (d *DefaultDispatcher) routedDispatch(ctx context.Context, link *transport.
 		log.Record(accessMessage)
 	}
 
-	netNamespace := session.GetNetNamespaceFromContext(ctx)
-	if netNamespace == "" {
-		handler.Dispatch(ctx, link)
-	} else {
-		ns.WithNetNSPath(netNamespace, func(_ ns.NetNS) error {
-			handler.Dispatch(ctx, link)
-			return nil
-		})
-	}
+	handler.Dispatch(ctx, link)
 }
