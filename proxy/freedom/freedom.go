@@ -126,7 +126,8 @@ func (h *Handler) Process(ctx context.Context, link *transport.Link, dialer inte
 	netNamespace := session.GetNetNamespaceFromContext(ctx)
 
 	var conn internet.Connection
-	err := ns.WithNetNSPath(netNamespace, func(netNS ns.NetNS) error {
+	var err error
+	fn := func() error {
 		return retry.ExponentialBackoff(5, 100).On(func() error {
 			dialDest := destination
 			if h.config.useIP() && dialDest.Address.Family().IsDomain() {
@@ -148,7 +149,14 @@ func (h *Handler) Process(ctx context.Context, link *transport.Link, dialer inte
 			conn = rawConn
 			return nil
 		})
-	})
+	}
+	if netNamespace == "" {
+		err = retry.ExponentialBackoff(5, 100).On(fn)
+	} else {
+		err = ns.WithNetNSPath(netNamespace, func(_ ns.NetNS) error {
+			return retry.ExponentialBackoff(5, 100).On(fn)
+		})
+	}
 	if err != nil {
 		return newError("failed to open connection to ", destination).Base(err)
 	}
