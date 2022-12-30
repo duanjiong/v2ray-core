@@ -122,29 +122,35 @@ func (h *Handler) Process(ctx context.Context, link *transport.Link, dialer inte
 	netNamespace := session.GetNetNamespaceFromContext(ctx)
 
 	var conn internet.Connection
-	err := ns.WithNetNSPath(netNamespace, func(_ ns.NetNS) error {
-		return retry.ExponentialBackoff(5, 100).On(func() error {
-			dialDest := destination
-			if h.config.useIP() && dialDest.Address.Family().IsDomain() {
-				ip := h.resolveIP(ctx, dialDest.Address.Domain(), dialer.Address())
-				if ip != nil {
-					dialDest = net.Destination{
-						Network: dialDest.Network,
-						Address: ip,
-						Port:    dialDest.Port,
-					}
-					newError("dialing to ", dialDest).WriteToLog(session.ExportIDToError(ctx))
+	var err error
+	fn := func() error {
+		dialDest := destination
+		if h.config.useIP() && dialDest.Address.Family().IsDomain() {
+			ip := h.resolveIP(ctx, dialDest.Address.Domain(), dialer.Address())
+			if ip != nil {
+				dialDest = net.Destination{
+					Network: dialDest.Network,
+					Address: ip,
+					Port:    dialDest.Port,
 				}
+				newError("dialing to ", dialDest).WriteToLog(session.ExportIDToError(ctx))
 			}
+		}
 
-			rawConn, err := dialer.Dial(ctx, dialDest)
-			if err != nil {
-				return err
-			}
-			conn = rawConn
-			return nil
+		rawConn, err := dialer.Dial(ctx, dialDest)
+		if err != nil {
+			return err
+		}
+		conn = rawConn
+		return nil
+	}
+	if netNamespace == "" {
+		err = retry.ExponentialBackoff(5, 100).On(fn)
+	} else {
+		err = ns.WithNetNSPath(netNamespace, func(_ ns.NetNS) error {
+			return retry.ExponentialBackoff(5, 100).On(fn)
 		})
-	})
+	}
 	if err != nil {
 		return newError("failed to open connection to ", destination).Base(err)
 	}
