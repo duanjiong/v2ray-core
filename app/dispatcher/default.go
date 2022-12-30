@@ -11,7 +11,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/containernetworking/plugins/pkg/ns"
 	core "github.com/v2fly/v2ray-core/v4"
 	"github.com/v2fly/v2ray-core/v4/common"
 	"github.com/v2fly/v2ray-core/v4/common/buf"
@@ -342,13 +341,5 @@ func (d *DefaultDispatcher) routedDispatch(ctx context.Context, link *transport.
 		log.Record(accessMessage)
 	}
 
-	netNamespace := session.GetNetNamespaceFromContext(ctx)
-	if netNamespace == "" {
-		handler.Dispatch(ctx, link)
-	} else {
-		ns.WithNetNSPath(netNamespace, func(_ ns.NetNS) error {
-			handler.Dispatch(ctx, link)
-			return nil
-		})
-	}
+	handler.Dispatch(ctx, link)
 }

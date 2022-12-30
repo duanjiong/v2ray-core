@@ -7,6 +7,7 @@ package freedom
 
 import (
 	"context"
+	"github.com/containernetworking/plugins/pkg/ns"
 	"time"
 
 	core "github.com/v2fly/v2ray-core/v4"
@@ -118,27 +119,31 @@ func (h *Handler) Process(ctx context.Context, link *transport.Link, dialer inte
 	input := link.Reader
 	output := link.Writer
 
-	var conn internet.Connection
-	err := retry.ExponentialBackoff(5, 100).On(func() error {
-		dialDest := destination
-		if h.config.useIP() && dialDest.Address.Family().IsDomain() {
-			ip := h.resolveIP(ctx, dialDest.Address.Domain(), dialer.Address())
-			if ip != nil {
-				dialDest = net.Destination{
-					Network: dialDest.Network,
-					Address: ip,
-					Port:    dialDest.Port,
-				}
-				newError("dialing to ", dialDest).WriteToLog(session.ExportIDToError(ctx))
-			}
-		}
+	netNamespace := session.GetNetNamespaceFromContext(ctx)
 
-		rawConn, err := dialer.Dial(ctx, dialDest)
-		if err != nil {
-			return err
-		}
-		conn = rawConn
-		return nil
+	var conn internet.Connection
+	err := ns.WithNetNSPath(netNamespace, func(_ ns.NetNS) error {
+		return retry.ExponentialBackoff(5, 100).On(func() error {
+			dialDest := destination
+			if h.config.useIP() && dialDest.Address.Family().IsDomain() {
+				ip := h.resolveIP(ctx, dialDest.Address.Domain(), dialer.Address())
+				if ip != nil {
+					dialDest = net.Destination{
+						Network: dialDest.Network,
+						Address: ip,
+						Port:    dialDest.Port,
+					}
+					newError("dialing to ", dialDest).WriteToLog(session.ExportIDToError(ctx))
+				}
+			}
+
+			rawConn, err := dialer.Dial(ctx, dialDest)
+			if err != nil {
+				return err
+			}
+			conn = rawConn
+			return nil
+		})
 	})
 	if err != nil {
 		return newError("failed to open connection to ", destination).Base(err)
