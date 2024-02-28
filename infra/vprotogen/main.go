@@ -173,23 +173,23 @@ func main() {
 		os.Exit(1)
 	}
 
-	installedVersion, err := getInstalledProtocVersion(protoc)
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-
-	if needToUpdate(targetedVersion, installedVersion) {
-		fmt.Printf(`
-You are using an old protobuf version, please update to v%s or later.
-Download it from https://github.com/protocolbuffers/protobuf/releases
-
-    * Protobuf version used in V2Ray project: v%s
-    * Protobuf version you have installed: v%s
-
-`, targetedVersion, targetedVersion, installedVersion)
-		os.Exit(1)
-	}
+	//	installedVersion, err := getInstalledProtocVersion(protoc)
+	//	if err != nil {
+	//		fmt.Println(err)
+	//		os.Exit(1)
+	//	}
+	//
+	//	if needToUpdate(targetedVersion, installedVersion) {
+	//		fmt.Printf(`
+	//You are using an old protobuf version, please update to v%s or later.
+	//Download it from https://github.com/protocolbuffers/protobuf/releases
+	//
+	//    * Protobuf version used in V2Ray project: v%s
+	//    * Protobuf version you have installed: v%s
+	//
+	//`, targetedVersion, targetedVersion, installedVersion)
+	//		os.Exit(1)
+	//	}
 
 	protoFilesMap := make(map[string][]string)
 	walkErr := filepath.Walk("./", func(path string, info os.FileInfo, err error) error {
