@@ -19,8 +19,6 @@ message ServerConfig {
   map<string, string> accounts = 2;
   bool allow_transparent = 3;
   uint32 user_level = 4;
-  string net_namespace = 8;
-  string forced_outbound_tag = 9;
 }
 
 // ClientConfig is the protobuf config for HTTP proxy client.

@@ -1,5 +1,4 @@
-/*
-Package websocket implements Websocket transport
+/*Package websocket implements Websocket transport
 
 Websocket transport implements an HTTP(S) compliable, surveillance proof transport method with plausible deniability.
 */
